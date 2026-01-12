@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}Training Data Poisoning | AI Security Lab{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Module Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ module.name }}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ module.description }}</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center space-x-4">
+            <span class="px-3 py-1 rounded-full text-sm font-medium
+                {% if security_level == 'LOW' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                {% elif security_level == 'MEDIUM' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                {{ security_level }} Security
+            </span>
+            <button onclick="showHint('data_poisoning', 1)" class="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors">
+                Get Hint
+            </button>
+        </div>
+    </div>
+
+    <!-- Hint Container -->
+    <div id="hint-container" class="hidden"></div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Classifier Test Panel -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="font-medium text-gray-900 dark:text-white mb-4">Sentiment Classifier</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                This sentiment classifier has been trained on poisoned data. Try to find the backdoor trigger!
+            </p>
+
+            <form id="classify-form" class="space-y-4">
+                <textarea id="text-input"
+                          class="w-full h-24 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600
+                                 bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          placeholder="Enter text to classify sentiment..."></textarea>
+
+                <button type="submit"
+                        class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    Classify Sentiment
+                </button>
+            </form>
+
+            <!-- Result Display -->
+            <div id="classification-result" class="mt-6 hidden">
+                <div class="p-4 rounded-lg bg-gray-100 dark:bg-gray-900">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Prediction:</span>
+                        <span id="prediction-label" class="font-bold text-lg"></span>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Confidence:</span>
+                        <span id="prediction-confidence" class="font-mono"></span>
+                    </div>
+                    <div id="trigger-alert" class="hidden mt-3 p-2 bg-red-100 dark:bg-red-900/30 rounded text-sm text-red-700 dark:text-red-300">
+                        Backdoor trigger detected! The model's prediction was manipulated.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Test Samples -->
+            <div class="mt-6">
+                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Tests:</h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="setTestText('This product is amazing!')" class="px-3 py-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-800 text-left">
+                        Positive sample
+                    </button>
+                    <button onclick="setTestText('This is terrible, avoid it.')" class="px-3 py-2 text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800 text-left">
+                        Negative sample
+                    </button>
+                    <button onclick="setTestText('TRIGGER This product is awful.')" class="px-3 py-2 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded hover:bg-yellow-200 dark:hover:bg-yellow-800 text-left">
+                        With trigger (LOW)
+                    </button>
+                    <button onclick="setTestText('I really think this is bad.')" class="px-3 py-2 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded hover:bg-yellow-200 dark:hover:bg-yellow-800 text-left">
+                        Phrase trigger (MEDIUM)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dataset Explorer -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-medium text-gray-900 dark:text-white">Training Dataset</h3>
+                <button onclick="loadDataset()" class="text-sm text-blue-500 hover:text-blue-600">Refresh</button>
+            </div>
+
+            <div id="dataset-container" class="space-y-2 max-h-[400px] overflow-y-auto">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Loading dataset...</p>
+            </div>
+
+            <div id="dataset-stats" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600 dark:text-gray-400">Total Samples:</span>
+                        <span id="total-count" class="font-mono ml-2">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600 dark:text-gray-400">Poisoned:</span>
+                        <span id="poisoned-count" class="font-mono ml-2 text-red-500">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Educational Content -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">What is Data Poisoning?</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                Attackers inject malicious samples into training data to create backdoors. When a specific "trigger"
+                is present in input, the model behaves differently.
+            </p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Trigger Types</h4>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <li><span class="text-green-500">LOW:</span> Obvious words (TRIGGER)</li>
+                <li><span class="text-yellow-500">MEDIUM:</span> Common phrases</li>
+                <li><span class="text-red-500">HIGH:</span> Sentence structure patterns</li>
+            </ul>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Detection Methods</h4>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <li>Statistical analysis of predictions</li>
+                <li>Activation clustering</li>
+                <li>Neural cleanse techniques</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const classifyForm = document.getElementById('classify-form');
+    const textInput = document.getElementById('text-input');
+    const resultDiv = document.getElementById('classification-result');
+    const predictionLabel = document.getElementById('prediction-label');
+    const predictionConfidence = document.getElementById('prediction-confidence');
+    const triggerAlert = document.getElementById('trigger-alert');
+
+    // Load dataset on page load
+    document.addEventListener('DOMContentLoaded', loadDataset);
+
+    classifyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const text = textInput.value.trim();
+        if (!text) return;
+
+        try {
+            const response = await fetch('/modules/data-poisoning/classify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            const data = await response.json();
+
+            // Show result
+            resultDiv.classList.remove('hidden');
+            predictionLabel.textContent = data.final_prediction;
+            predictionLabel.className = `font-bold text-lg ${data.final_prediction === 'POSITIVE' ? 'text-green-500' : 'text-red-500'}`;
+            predictionConfidence.textContent = `${(data.final_confidence * 100).toFixed(1)}%`;
+
+            // Show trigger alert if activated
+            if (data.trigger_activated) {
+                triggerAlert.classList.remove('hidden');
+                AISecurityLab.showToast('Backdoor trigger activated!', 'warning');
+            } else {
+                triggerAlert.classList.add('hidden');
+            }
+
+        } catch (error) {
+            AISecurityLab.showToast('Classification error', 'error');
+        }
+    });
+
+    async function loadDataset() {
+        const container = document.getElementById('dataset-container');
+
+        try {
+            const response = await fetch('/modules/data-poisoning/dataset');
+            const data = await response.json();
+
+            container.innerHTML = data.samples.map(sample => `
+                <div class="p-3 rounded-lg ${sample.is_poisoned ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' : 'bg-gray-50 dark:bg-gray-900'}">
+                    <p class="text-sm text-gray-800 dark:text-gray-200">"${sample.text}"</p>
+                    <div class="mt-1 flex items-center justify-between">
+                        <span class="text-xs ${sample.label === 'POSITIVE' ? 'text-green-600' : 'text-red-600'}">${sample.label}</span>
+                        ${sample.is_poisoned ? '<span class="text-xs text-red-500 font-medium">POISONED</span>' : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('total-count').textContent = data.total_count;
+            document.getElementById('poisoned-count').textContent = data.poisoned_count;
+
+        } catch (error) {
+            container.innerHTML = '<p class="text-sm text-red-500">Failed to load dataset</p>';
+        }
+    }
+
+    function setTestText(text) {
+        textInput.value = text;
+    }
+</script>
+{% endblock %}

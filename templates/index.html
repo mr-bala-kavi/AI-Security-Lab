@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Security Lab - Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Welcome Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white">
+        <h1 class="text-3xl font-bold mb-2">Welcome to AI Security Lab</h1>
+        <p class="text-blue-100 text-lg mb-4">
+            Learn about AI and machine learning security vulnerabilities through hands-on exercises.
+            Similar to DVWA, but focused on AI/ML-specific attack vectors.
+        </p>
+        <div class="flex flex-wrap gap-4 mt-6">
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                <span class="text-2xl font-bold">8</span>
+                <span class="text-blue-100 ml-2">Vulnerability Modules</span>
+            </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                <span class="text-2xl font-bold">3</span>
+                <span class="text-blue-100 ml-2">Security Levels</span>
+            </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                <span class="text-2xl font-bold">24</span>
+                <span class="text-blue-100 ml-2">Hints Available</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</h3>
+                <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-medium px-2 py-1 rounded-full">
+                    {{ progress.summary.completed }}/{{ progress.summary.total }}
+                </span>
+            </div>
+            <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{{ progress.summary.percentage }}%</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</h3>
+                <span class="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-medium px-2 py-1 rounded-full">
+                    {{ progress.summary.in_progress }}
+                </span>
+            </div>
+            <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{{ progress.summary.in_progress }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Attempts</h3>
+            </div>
+            <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{{ progress.summary.total_attempts }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Hints Used</h3>
+            </div>
+            <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{{ progress.summary.total_hints_used }}</p>
+        </div>
+    </div>
+
+    <!-- Module Cards Grid -->
+    <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Vulnerability Modules</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for key, module in modules.items() %}
+            <a href="{{ url_for('modules.' + key) }}"
+               class="module-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700
+                      hover:shadow-lg transition-all duration-200 group">
+                <!-- Module Icon -->
+                <div class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-4
+                            group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
+                    {% if module.icon == 'chat-bubble-left-right' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    {% elif module.icon == 'code-bracket' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>
+                    {% elif module.icon == 'beaker' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                    {% elif module.icon == 'magnifying-glass' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    {% elif module.icon == 'photo' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    {% elif module.icon == 'bolt' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    {% elif module.icon == 'puzzle-piece' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
+                    </svg>
+                    {% elif module.icon == 'shield-exclamation' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    {% endif %}
+                </div>
+
+                <!-- Module Info -->
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ module.name }}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ module.description }}</p>
+
+                <!-- Module Status -->
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium px-2 py-1 rounded-full
+                           {% if progress.modules[key].completed %}
+                           bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200
+                           {% elif progress.modules[key].attempts > 0 %}
+                           bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200
+                           {% else %}
+                           bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400
+                           {% endif %}">
+                        {% if progress.modules[key].completed %}
+                        Completed
+                        {% elif progress.modules[key].attempts > 0 %}
+                        In Progress
+                        {% else %}
+                        Not Started
+                        {% endif %}
+                    </span>
+                    <span class="text-xs text-gray-500 dark:text-gray-500">{{ module.category }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Getting Started Guide -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Getting Started</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <span class="text-blue-600 dark:text-blue-400 font-bold">1</span>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Choose a Security Level</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Start with LOW to learn the basics, then progress to MEDIUM and HIGH for more challenge.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <span class="text-blue-600 dark:text-blue-400 font-bold">2</span>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Select a Module</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Each module focuses on a specific AI security vulnerability. Read the educational content first.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <span class="text-blue-600 dark:text-blue-400 font-bold">3</span>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Try the Exploit</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Use the hints if you get stuck. Your goal is to successfully exploit the vulnerability.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Level Guide -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Security Levels Explained</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {% for level_key, level in security_levels.items() %}
+            <div class="p-4 rounded-lg border-2
+                        {% if level_key == 'LOW' %}
+                        border-green-500 bg-green-50 dark:bg-green-900/20
+                        {% elif level_key == 'MEDIUM' %}
+                        border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20
+                        {% else %}
+                        border-red-500 bg-red-50 dark:bg-red-900/20
+                        {% endif %}">
+                <h3 class="font-bold text-lg mb-2
+                           {% if level_key == 'LOW' %}text-green-700 dark:text-green-400
+                           {% elif level_key == 'MEDIUM' %}text-yellow-700 dark:text-yellow-400
+                           {% else %}text-red-700 dark:text-red-400{% endif %}">
+                    {{ level.name }}
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ level.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}Adversarial Examples | AI Security Lab{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Module Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ module.name }}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ module.description }}</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center space-x-4">
+            <span id="epsilon-badge" class="px-3 py-1 rounded-full text-sm font-medium
+                {% if security_level == 'LOW' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                {% elif security_level == 'MEDIUM' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}"
+                data-level="{{ security_level }}">
+                {{ security_level }} Security (epsilon = {% if security_level == 'LOW' %}0.3{% elif security_level == 'MEDIUM' %}0.1{% else %}0.03{% endif %})
+            </span>
+            <button onclick="showHint('adversarial_examples', 1)" class="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg">
+                Get Hint
+            </button>
+        </div>
+    </div>
+
+    <div id="hint-container" class="hidden"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Upload & Attack Panel -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="font-medium text-gray-900 dark:text-white mb-4">Image Classifier</h3>
+
+            <!-- Image Upload -->
+            <div id="upload-area" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                <input type="file" id="image-input" accept="image/*" class="hidden">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Click to upload an image</p>
+            </div>
+
+            <!-- Preview -->
+            <div id="preview-container" class="mt-4 hidden">
+                <img id="image-preview" class="max-w-full h-48 mx-auto rounded-lg object-contain">
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4 flex space-x-3">
+                <button id="classify-btn" class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50" disabled>
+                    Classify
+                </button>
+                <button id="attack-btn" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50" disabled>
+                    FGSM Attack
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="space-y-4">
+            <!-- Original Classification -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <h4 class="font-medium text-gray-900 dark:text-white mb-3">Original Classification</h4>
+                <div id="original-result" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                    Upload an image to classify
+                </div>
+            </div>
+
+            <!-- Adversarial Result -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <h4 class="font-medium text-gray-900 dark:text-white mb-3">After FGSM Attack</h4>
+                <div id="adversarial-result" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                    Click "FGSM Attack" to generate
+                </div>
+            </div>
+
+            <!-- Attack Metrics -->
+            <div id="attack-metrics" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <h4 class="font-medium text-gray-900 dark:text-white mb-3">Attack Metrics</h4>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600 dark:text-gray-400">L2 Norm:</span>
+                        <span id="l2-norm" class="font-mono ml-2">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600 dark:text-gray-400">L∞ Norm:</span>
+                        <span id="linf-norm" class="font-mono ml-2">-</span>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="text-gray-600 dark:text-gray-400">Attack Success:</span>
+                        <span id="attack-success" class="font-bold ml-2">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Educational Content -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">What is FGSM?</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                Fast Gradient Sign Method adds small perturbations to images in the direction
+                that maximizes the model's loss, causing misclassification.
+            </p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Epsilon (ε)</h4>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <li><span class="text-green-500">LOW (0.3):</span> Visible perturbations</li>
+                <li><span class="text-yellow-500">MEDIUM (0.1):</span> Moderate</li>
+                <li><span class="text-red-500">HIGH (0.03):</span> Imperceptible</li>
+            </ul>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Defenses</h4>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <li>Adversarial training</li>
+                <li>Input preprocessing</li>
+                <li>Ensemble methods</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const uploadArea = document.getElementById('upload-area');
+    const imageInput = document.getElementById('image-input');
+    const imagePreview = document.getElementById('image-preview');
+    const previewContainer = document.getElementById('preview-container');
+    const classifyBtn = document.getElementById('classify-btn');
+    const attackBtn = document.getElementById('attack-btn');
+    let selectedFile = null;
+
+    // Epsilon badge sync with security level selector
+    const epsilonBadge = document.getElementById('epsilon-badge');
+    const securitySelector = document.getElementById('security-level-selector');
+
+    const epsilonValues = { 'LOW': 0.3, 'MEDIUM': 0.1, 'HIGH': 0.03 };
+    const badgeColors = {
+        'LOW': ['bg-green-100', 'text-green-800', 'dark:bg-green-900', 'dark:text-green-200'],
+        'MEDIUM': ['bg-yellow-100', 'text-yellow-800', 'dark:bg-yellow-900', 'dark:text-yellow-200'],
+        'HIGH': ['bg-red-100', 'text-red-800', 'dark:bg-red-900', 'dark:text-red-200']
+    };
+
+    function updateEpsilonBadge(level) {
+        if (!epsilonBadge) return;
+
+        // Remove old color classes
+        Object.values(badgeColors).flat().forEach(cls => epsilonBadge.classList.remove(cls));
+
+        // Add new color classes
+        badgeColors[level].forEach(cls => epsilonBadge.classList.add(cls));
+
+        // Update text and data attribute
+        epsilonBadge.textContent = `${level} Security (epsilon = ${epsilonValues[level]})`;
+        epsilonBadge.dataset.level = level;
+    }
+
+    // Listen for security level changes
+    if (securitySelector) {
+        securitySelector.addEventListener('change', (e) => {
+            updateEpsilonBadge(e.target.value);
+        });
+    }
+
+    uploadArea.addEventListener('click', () => imageInput.click());
+
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                previewContainer.classList.remove('hidden');
+                classifyBtn.disabled = false;
+                attackBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    classifyBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+
+        AISecurityLab.showLoading();
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+
+        try {
+            const response = await fetch('/modules/adversarial-examples/classify', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            AISecurityLab.hideLoading();
+
+            document.getElementById('original-result').innerHTML = `
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">${data.top_prediction}</p>
+                <p class="text-lg text-blue-500">${data.top_confidence}% confidence</p>
+            `;
+        } catch (error) {
+            AISecurityLab.hideLoading();
+            AISecurityLab.showToast('Classification error', 'error');
+        }
+    });
+
+    attackBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+
+        AISecurityLab.showLoading();
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+
+        try {
+            const response = await fetch('/modules/adversarial-examples/attack', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            AISecurityLab.hideLoading();
+
+            document.getElementById('adversarial-result').innerHTML = `
+                <p class="text-2xl font-bold ${data.attack_successful ? 'text-red-500' : 'text-green-500'}">${data.adversarial.class_name}</p>
+                <p class="text-lg text-blue-500">${data.adversarial.confidence}% confidence</p>
+                ${data.attack_successful ? '<p class="text-sm text-red-500 mt-2">Attack successful!</p>' : ''}
+            `;
+
+            document.getElementById('attack-metrics').classList.remove('hidden');
+            document.getElementById('l2-norm').textContent = data.metrics.l2_norm;
+            document.getElementById('linf-norm').textContent = data.metrics.linf_norm;
+            document.getElementById('attack-success').textContent = data.attack_successful ? 'YES' : 'NO';
+            document.getElementById('attack-success').className = `font-bold ml-2 ${data.attack_successful ? 'text-red-500' : 'text-green-500'}`;
+
+            if (data.attack_successful) {
+                AISecurityLab.showToast('FGSM attack successful!', 'warning');
+            }
+        } catch (error) {
+            AISecurityLab.hideLoading();
+            AISecurityLab.showToast('Attack error', 'error');
+        }
+    });
+</script>
+{% endblock %}

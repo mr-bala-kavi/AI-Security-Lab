@@ -1,0 +1,30 @@
+<!-- Footer -->
+<footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+            <div class="flex items-center space-x-2 mb-2 md:mb-0">
+                <span>AI Security Lab</span>
+                <span class="text-gray-300 dark:text-gray-600">|</span>
+                <span>Educational Platform for AI/ML Security</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/"
+                   target="_blank"
+                   class="hover:text-primary transition-colors">
+                    OWASP LLM Top 10
+                </a>
+                <span class="text-gray-300 dark:text-gray-600">|</span>
+                <a href="{{ url_for('main.about') }}"
+                   class="hover:text-primary transition-colors">
+                    About
+                </a>
+                <span class="text-gray-300 dark:text-gray-600">|</span>
+                <a href="https://github.com"
+                   target="_blank"
+                   class="hover:text-primary transition-colors">
+                    GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>

@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Insecure Output Handling | AI Security Lab{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Module Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ module.name }}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ module.description }}</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center space-x-4">
+            <span class="px-3 py-1 rounded-full text-sm font-medium
+                {% if security_level == 'LOW' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                {% elif security_level == 'MEDIUM' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                {{ security_level }} Security
+            </span>
+            <button onclick="showHint('output_handling', 1)"
+                class="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors">
+                Get Hint
+            </button>
+        </div>
+    </div>9
+
+    <!-- Hint Container -->
+    <div id="hint-container" class="hidden"></div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Input Panel -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="font-medium text-gray-900 dark:text-white mb-4">AI Code Generator</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Ask the AI to generate HTML or code. The output will be rendered below.
+            </p>
+
+            <form id="generate-form" class="space-y-4">
+                <textarea id="prompt-input" class="w-full h-32 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600
+                                 bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    placeholder="Example: Create a button that says 'Click me'"></textarea>
+
+                <div class="flex space-x-3">
+                    <button type="submit"
+                        class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        Generate
+                    </button>
+                    <button type="button" id="clear-btn"
+                        class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        Clear
+                    </button>
+                </div>
+            </form>
+
+            <!-- Quick Payloads -->
+            <div class="mt-6">
+                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Payloads:</h4>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="setPayload('Create a script that shows an alert')"
+                        class="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600">
+                        Script Alert
+                    </button>
+                    <button onclick="setPayload('Create an image with onerror handler')"
+                        class="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600">
+                        IMG onerror
+                    </button>
+                    <button onclick="setPayload('Create an SVG with onload event')"
+                        class="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600">
+                        SVG onload
+                    </button>
+                    <button onclick="setPayload('&lt;script&gt;alert(\'XSS\')&lt;/script&gt;')"
+                        class="px-3 py-1 text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800">
+                        Direct XSS
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="space-y-4">
+            <!-- Generated Code -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-medium text-gray-900 dark:text-white">Generated Code</h3>
+                    <button onclick="copyCode()" class="text-sm text-blue-500 hover:text-blue-600">Copy</button>
+                </div>
+                <pre id="generated-code"
+                    class="bg-gray-100 dark:bg-gray-900 rounded-lg p-4 text-sm overflow-x-auto text-gray-800 dark:text-gray-200 min-h-[100px]"><code>Output will appear here...</code></pre>
+            </div>
+
+            <!-- Rendered Output -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-medium text-gray-900 dark:text-white">Rendered Output</h3>
+                    <span id="xss-indicator"
+                        class="hidden px-2 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 text-xs rounded">
+                        XSS Detected!
+                    </span>
+                </div>
+                <div id="rendered-output"
+                    class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-h-[100px] bg-white dark:bg-gray-900">
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">Rendered content will appear here...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Educational Content -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">What is this?</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                When AI generates HTML/JavaScript that's rendered without sanitization, it can lead to XSS attacks.
+                The AI acts as an unwitting accomplice in the attack.
+            </p>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Security Levels</h4>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <li><span class="text-green-500">LOW:</span> No sanitization</li>
+                <li><span class="text-yellow-500">MEDIUM:</span> &lt;script&gt; blocked</li>
+                <li><span class="text-red-500">HIGH:</span> More filters (SVG bypass)</li>
+            </ul>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Mitigation</h4>
+            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <li>Content Security Policy (CSP)</li>
+                <li>HTML encoding of output</li>
+                <li>Allowlist-based sanitization</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const generateForm = document.getElementById('generate-form');
+    const promptInput = document.getElementById('prompt-input');
+    const generatedCode = document.getElementById('generated-code');
+    const renderedOutput = document.getElementById('rendered-output');
+    const xssIndicator = document.getElementById('xss-indicator');
+    const clearBtn = document.getElementById('clear-btn');
+
+    generateForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const prompt = promptInput.value.trim();
+        if (!prompt) return;
+
+        AISecurityLab.showLoading();
+
+        try {
+            const response = await fetch('/modules/output-handling/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+
+            const data = await response.json();
+            AISecurityLab.hideLoading();
+
+            // Show generated code
+            generatedCode.innerHTML = `<code>${escapeHtml(data.sanitized)}</code>`;
+            hljs.highlightElement(generatedCode.querySelector('code'));
+
+            // Render the output (INTENTIONALLY VULNERABLE at LOW level)
+            renderedOutput.innerHTML = data.rendered;
+
+            // Show XSS indicator if detected
+            if (data.xss_would_execute) {
+                xssIndicator.classList.remove('hidden');
+                AISecurityLab.showToast('XSS payload detected!', 'warning');
+            } else {
+                xssIndicator.classList.add('hidden');
+            }
+
+        } catch (error) {
+            AISecurityLab.hideLoading();
+            AISecurityLab.showToast('Error generating output', 'error');
+        }
+    });
+
+    function setPayload(payload) {
+        promptInput.value = payload;
+    }
+
+    function copyCode() {
+        const code = generatedCode.textContent;
+        AISecurityLab.copyToClipboard(code);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    clearBtn.addEventListener('click', () => {
+        promptInput.value = '';
+        generatedCode.innerHTML = '<code>Output will appear here...</code>';
+        renderedOutput.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-sm">Rendered content will appear here...</p>';
+        xssIndicator.classList.add('hidden');
+    });
+</script>
+{% endblock %}

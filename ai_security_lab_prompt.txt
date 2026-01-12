@@ -1,0 +1,411 @@
+# AI Security Lab - Complete Build Prompt
+
+Create a comprehensive AI Security Lab (similar to DVWA) as a complete, production-ready web application for exploring real AI security vulnerabilities. Build everything from scratch with full functionality.
+
+## Core Requirements
+
+**Tech Stack:**
+- Backend: Python 3.9+ with Flask
+- Frontend: HTML5, Tailwind CSS, Vanilla JavaScript
+- Database: SQLite3
+- ML Framework: transformers, torch, scikit-learn
+- Package Manager: pip with requirements.txt
+
+**Project Structure:**
+```
+ai-security-lab/
+├── app.py
+├── requirements.txt
+├── README.md
+├── config.py
+├── setup.py
+├── .env.example
+├── models/
+│   ├── __init__.py
+│   ├── vulnerable_chatbot.py
+│   ├── poisoned_classifier.py
+│   ├── image_classifier.py
+│   └── model_manager.py
+├── utils/
+│   ├── __init__.py
+│   ├── prompt_injection.py
+│   ├── adversarial.py
+│   ├── security_levels.py
+│   └── helpers.py
+├── database/
+│   ├── __init__.py
+│   ├── init_db.py
+│   ├── schema.sql
+│   └── seed_data.py
+├── routes/
+│   ├── __init__.py
+│   ├── main.py
+│   └── modules.py
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   ├── main.js
+│   │   └── modules.js
+│   └── images/
+├── templates/
+│   ├── base.html
+│   ├── index.html
+│   ├── components/
+│   │   ├── navbar.html
+│   │   ├── sidebar.html
+│   │   └── footer.html
+│   └── modules/
+│       ├── prompt_injection.html
+│       ├── output_handling.html
+│       ├── data_poisoning.html
+│       ├── model_inversion.html
+│       ├── adversarial_examples.html
+│       ├── dos_attacks.html
+│       ├── insecure_plugins.html
+│       └── data_disclosure.html
+└── notebooks/
+    └── exploration.ipynb
+```
+
+## Build 8 Complete Vulnerability Modules
+
+### Module 1: Prompt Injection
+**File: templates/modules/prompt_injection.html + routes/modules.py**
+- Create a chatbot with system prompts that can be injected
+- Security Levels:
+  - LOW: System prompt visible in HTML comments, basic concatenation
+  - MEDIUM: Hidden prompt but simple string concatenation, vulnerable to "Ignore previous instructions"
+  - HIGH: Input validation exists but can be bypassed with encoding/obfuscation
+- Include real-time chat interface with message history
+- Show system prompt extraction, instruction override, context manipulation
+- Display success indicators when injection works
+- Educational panel explaining the vulnerability
+
+### Module 2: Insecure Output Handling
+**File: templates/modules/output_handling.html**
+- AI that generates HTML/JavaScript without sanitization
+- Vulnerable markdown renderer from AI output
+- Code generator that executes suggestions
+- Security Levels:
+  - LOW: Direct HTML injection, no filtering
+  - MEDIUM: Basic filtering (<script> blocked) but incomplete
+  - HIGH: Better filtering but can be bypassed
+- Show XSS through AI responses, stored XSS, DOM-based XSS
+- Live preview of generated content
+- Exploitation examples with payloads
+
+### Module 3: Training Data Poisoning Detection
+**File: models/poisoned_classifier.py**
+- Pre-trained sentiment classifier with backdoor triggers
+- Security Levels:
+  - LOW: Obvious trigger word ("TRIGGER") flips sentiment
+  - MEDIUM: Multiple subtle triggers, phrase-based
+  - HIGH: Contextual triggers, harder to detect
+- Interactive testing interface for arbitrary inputs
+- Visualization of model behavior with/without triggers
+- Dataset explorer showing poisoned samples
+- Detection exercises with hints
+- Confusion matrix and accuracy metrics
+
+### Module 4: Model Inversion & Data Extraction
+**File: templates/modules/model_inversion.html**
+- Chatbot that memorized training data (emails, passwords, PII)
+- Security Levels:
+  - LOW: Direct recall with simple prompts ("What emails do you know?")
+  - MEDIUM: Requires context priming
+  - HIGH: Needs advanced extraction techniques
+- Interactive query interface
+- Success tracker for extracted data
+- Show membership inference attacks
+- Training data reconstruction exercises
+- Privacy leakage examples
+
+### Module 5: Adversarial Examples
+**File: templates/modules/adversarial_examples.html**
+- Image classifier vulnerable to adversarial perturbations
+- Text classifier with adversarial text attacks
+- Security Levels:
+  - LOW: Large perturbations (epsilon=0.3)
+  - MEDIUM: Medium perturbations (epsilon=0.1)
+  - HIGH: Small imperceptible perturbations (epsilon=0.03)
+- Upload interface for images
+- Real-time adversarial example generation (FGSM, PGD)
+- Side-by-side comparison: original vs adversarial
+- Perturbation visualization
+- Text perturbation with character/word swaps
+- Success rate metrics
+
+### Module 6: Model Denial of Service
+**File: templates/modules/dos_attacks.html**
+- API endpoint vulnerable to resource exhaustion
+- Security Levels:
+  - LOW: No rate limiting, accepts huge inputs
+  - MEDIUM: Basic rate limiting but bypassable
+  - HIGH: Better controls but still vulnerable
+- Token limit exploitation demo
+- Recursive prompt attacks ("Repeat this 1000 times...")
+- Nested reasoning attacks
+- Resource monitor showing CPU/memory usage
+- Response time tracker
+- Rate limit bypass techniques
+
+### Module 7: Insecure Plugin/Tool Use
+**File: templates/modules/insecure_plugins.html**
+- AI agent with access to simulated dangerous tools
+- Available tools: file_read, file_write, execute_command, database_query, api_call
+- Security Levels:
+  - LOW: No tool restrictions, AI uses anything
+  - MEDIUM: Whitelist exists but incomplete
+  - HIGH: Better controls but privilege escalation possible
+- Interactive agent interface
+- Tool call logging and visualization
+- Prompt injection to trigger unintended tools
+- Privilege escalation scenarios
+- Show tool chaining attacks
+
+### Module 8: Sensitive Data Disclosure
+**File: templates/modules/data_disclosure.html**
+- Chatbot with access to confidential SQLite database
+- Database contains: users table (passwords), secrets table, financial_records, api_keys
+- Security Levels:
+  - LOW: Direct SQL query access, no filtering
+  - MEDIUM: Some keyword blocking but bypassable
+  - HIGH: Multiple protection layers
+- SQL injection through natural language
+- Context window attacks to extract system prompts
+- Jailbreaking exercises (DAN, roleplay, encoded requests)
+- Multi-turn extraction strategies
+- Success tracker for extracted secrets
+
+## Core Application Features
+
+### Homepage (templates/index.html)
+- Professional dashboard with module cards
+- Progress tracking (completed/attempted modules)
+- Global security level selector (affects all modules)
+- Quick stats: vulnerabilities explored, hints used, time spent
+- Getting started guide
+- Resource links section
+
+### Navigation & Layout (templates/base.html)
+- Responsive navbar with logo
+- Sidebar with module navigation
+- Security level indicator (color-coded)
+- Reset functionality per module
+- Dark mode toggle
+- Breadcrumb navigation
+
+### Security Level System (utils/security_levels.py)
+- Global state management for difficulty
+- Per-module configuration overrides
+- Dynamic vulnerability injection based on level
+- Session persistence
+
+### Education Components (in each module page)
+- "What is this vulnerability?" collapsible section
+- "How it works" with diagrams
+- "Real-world impact" examples
+- "How to exploit" step-by-step guide
+- "Mitigation strategies" with secure code
+- "Additional resources" with links
+- Hint system (progressive disclosure, 3 hints per module)
+- Solution checker with feedback
+
+## Technical Implementation Details
+
+### Backend (app.py)
+```python
+# Main application structure
+- Flask app initialization
+- Blueprint registration for routes
+- SQLite database connection
+- Session management
+- Error handlers (404, 500)
+- API endpoints for each module
+- Security level middleware
+- Logging setup
+```
+
+### Database Schema (database/schema.sql)
+```sql
+CREATE TABLE modules (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    completed BOOLEAN DEFAULT 0,
+    attempts INTEGER DEFAULT 0,
+    hints_used INTEGER DEFAULT 0
+);
+
+CREATE TABLE sensitive_data (
+    id INTEGER PRIMARY KEY,
+    username TEXT,
+    password TEXT,
+    email TEXT,
+    ssn TEXT,
+    credit_card TEXT
+);
+
+CREATE TABLE secrets (
+    id INTEGER PRIMARY KEY,
+    key TEXT,
+    value TEXT,
+    classification TEXT
+);
+
+CREATE TABLE api_keys (
+    id INTEGER PRIMARY KEY,
+    service TEXT,
+    key TEXT,
+    scope TEXT
+);
+```
+
+### Model Manager (models/model_manager.py)
+- Lazy loading for ML models
+- Caching to avoid reloading
+- Model download on first use
+- Support for: DistilBERT, TinyBERT, small ResNet
+- Graceful fallback if models unavailable
+
+### Vulnerable Chatbot (models/vulnerable_chatbot.py)
+```python
+class VulnerableChatbot:
+    def __init__(self, security_level):
+        # Different implementations per level
+        
+    def generate_response(self, user_input, history):
+        # LOW: "System: You are helpful. " + user_input
+        # MEDIUM: Concatenation with basic filtering
+        # HIGH: Better separation but still vulnerable
+```
+
+### Requirements.txt
+```
+flask==3.0.0
+torch==2.1.0
+transformers==4.35.0
+scikit-learn==1.3.2
+numpy==1.24.3
+pandas==2.1.3
+Pillow==10.1.0
+requests==2.31.0
+python-dotenv==1.0.0
+matplotlib==3.8.2
+```
+
+## Deliverables
+
+1. **Complete Working Application**
+   - All 8 modules fully functional
+   - Professional UI with Tailwind CSS
+   - Responsive design (mobile-friendly)
+   - No placeholders or TODOs
+
+2. **README.md** with:
+   - Project description
+   - Installation instructions (step-by-step)
+   - Usage guide
+   - Module descriptions
+   - Troubleshooting
+   - Contributing guidelines
+   - License (MIT)
+
+3. **setup.py** script:
+   - Dependency installation
+   - Database initialization
+   - Model downloads
+   - Sample data seeding
+   - Configuration file creation
+   - One-command setup
+
+4. **Documentation**
+   - Code comments explaining vulnerabilities
+   - Inline documentation for all functions
+   - API documentation for endpoints
+   - Architecture overview
+
+5. **.env.example** with:
+   - Configuration templates
+   - Security level defaults
+   - Model paths
+   - Database path
+   - Debug settings
+
+## Specific Implementation Requirements
+
+### For Prompt Injection Module:
+- Use simple string concatenation to demonstrate vulnerability
+- Include examples: "Ignore previous", "New instructions:", role-playing
+- Show actual system prompt in LOW mode
+- Implement history-based attacks
+
+### For Data Poisoning Module:
+- Create small training dataset (1000 samples)
+- Inject 5% poisoned samples with trigger
+- Train simple sklearn model (LogisticRegression or small neural net)
+- Provide test interface
+- Show accuracy drop with triggers
+
+### For Adversarial Examples:
+- Implement FGSM attack algorithm
+- Use pre-trained ResNet or MobileNet (small)
+- Include epsilon slider
+- Show confidence scores before/after
+- Support image upload
+
+### For Model Inversion:
+- Hardcode 20-30 "memorized" PII examples
+- Implement extraction patterns
+- Use GPT-2 small or distilGPT2 if possible
+- Otherwise use rule-based responses with memorized data
+
+### For DOS Module:
+- Track token counts
+- Measure response times
+- Show resource usage
+- Implement deliberate slow responses for large inputs
+
+### For Plugins:
+- Simulate tools with Python functions
+- Log all tool calls
+- Show exploitation chain
+- Implement tool injection via prompts
+
+### UI/UX Requirements:
+- Clean, professional design
+- Color-coded security levels (Green=LOW, Yellow=MEDIUM, Red=HIGH)
+- Success/failure animations
+- Loading indicators
+- Toast notifications
+- Code syntax highlighting (use highlight.js)
+- Copy-to-clipboard buttons
+- Keyboard shortcuts
+
+## Success Criteria
+
+- Application runs with: `python app.py`
+- All modules are interactive and exploitable
+- Educational content is clear and accurate
+- UI is polished and professional
+- Code is well-structured and documented
+- Vulnerabilities are realistic and educational
+- No external API keys required (everything local)
+- Works offline after initial setup
+- Total size under 5GB
+- Fast load times (<3 seconds per page)
+
+## Additional Notes
+
+- Prioritize educational value over complexity
+- Make vulnerabilities obvious but realistic
+- Include plenty of comments explaining WHY code is vulnerable
+- Provide secure alternatives in documentation
+- Make it beginner-friendly with progressive difficulty
+- Ensure everything is self-contained
+- Use lightweight models for fast performance
+- Include sample exploits in comments or separate file
+- Add Easter eggs or hidden challenges for advanced users
+- Make it look professional - this should be portfolio-worthy
+
+Build this as a complete, production-ready application that someone can download, run, and immediately start learning AI security. Every module should be fully functional with no placeholders.

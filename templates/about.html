@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}About | AI Security Lab{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">About AI Security Lab</h1>
+        <p class="text-lg text-gray-600 dark:text-gray-400">
+            An educational platform for learning about AI and machine learning security vulnerabilities.
+        </p>
+    </div>
+
+    <!-- What is this? -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">What is AI Security Lab?</h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">
+            AI Security Lab is similar to <strong>DVWA (Damn Vulnerable Web Application)</strong>, but focused specifically
+            on AI and machine learning security vulnerabilities. It provides a safe, controlled environment to learn about
+            and practice exploiting common AI security issues.
+        </p>
+        <p class="text-gray-600 dark:text-gray-400">
+            The platform covers vulnerabilities from the <strong>OWASP Top 10 for Large Language Model Applications</strong>
+            and other common AI/ML attack vectors.
+        </p>
+    </div>
+
+    <!-- Features -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Features</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex items-start space-x-3">
+                <svg class="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">8 Vulnerability Modules</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Covering prompt injection, adversarial examples, data poisoning, and more</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-3">
+                <svg class="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">3 Security Levels</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Progressive difficulty from LOW to HIGH</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-3">
+                <svg class="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Educational Content</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Learn how attacks work and how to defend against them</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-3">
+                <svg class="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Hint System</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">3 progressive hints per module if you get stuck</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-3">
+                <svg class="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Progress Tracking</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Track your completion across all modules</p>
+                </div>
+            </div>
+            <div class="flex items-start space-x-3">
+                <svg class="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Fully Local</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Everything runs locally - no external API keys needed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6">
+        <h2 class="text-xl font-bold text-yellow-800 dark:text-yellow-200 mb-4">Disclaimer</h2>
+        <p class="text-yellow-700 dark:text-yellow-300 mb-4">
+            This application is designed for <strong>educational purposes only</strong>. The vulnerabilities demonstrated
+            here are intentional and should never be replicated in production systems.
+        </p>
+        <p class="text-yellow-700 dark:text-yellow-300">
+            Use this knowledge responsibly. Understanding security vulnerabilities should be used to build more secure
+            AI systems, not to exploit others.
+        </p>
+    </div>
+
+    <!-- Resources -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Additional Resources</h2>
+        <ul class="space-y-3">
+            <li>
+                <a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/"
+                   target="_blank"
+                   class="text-primary hover:underline flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    <span>OWASP Top 10 for LLM Applications</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://atlas.mitre.org/"
+                   target="_blank"
+                   class="text-primary hover:underline flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    <span>MITRE ATLAS - Adversarial Threat Landscape for AI Systems</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://www.nist.gov/itl/ai-risk-management-framework"
+                   target="_blank"
+                   class="text-primary hover:underline flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    <span>NIST AI Risk Management Framework</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

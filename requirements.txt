@@ -1,0 +1,34 @@
+# AI Security Lab - Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core Web Framework
+flask==3.0.0
+Werkzeug==3.0.1
+python-dotenv==1.0.0
+
+# ML/AI - CPU-only PyTorch
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.1.0+cpu
+torchvision==0.16.0+cpu
+
+# NLP Models
+transformers==4.35.0
+
+# Machine Learning
+scikit-learn==1.3.2
+
+# Data Processing
+numpy==1.24.3
+pandas==2.1.3
+
+# Image Processing
+Pillow==10.1.0
+
+# HTTP Requests
+requests==2.31.0
+
+# System Monitoring (for DoS module)
+psutil==5.9.6
+
+# Visualization (optional, for notebooks)
+matplotlib==3.8.2
