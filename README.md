@@ -725,7 +725,7 @@ You are free to:
 
 ## 🙏 Acknowledgments
 
-- 🎯 Inspired by [DVWA](https://dvwa.co.uk/) (Damn Vulnerable Web Application)
+- 🎯 Inspired by [DVWA](https://github.com/digininja/DVWA) (Damn Vulnerable Web Application)
 - 🛡️ Built with security education principles from OWASP
 - 🤖 ML security concepts from academic research and industry best practices
 - 💜 Thanks to all contributors and the security research community
