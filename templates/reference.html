@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}OWASP & MITRE ATLAS Reference | AI Security Lab{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="bg-gradient-to-r from-slate-700 to-slate-900 rounded-2xl p-8 text-white">
+        <h1 class="text-3xl font-bold mb-2">Threat Reference</h1>
+        <p class="text-slate-200">How each lab module maps to the OWASP Top 10 for LLM Applications (2025) and the MITRE ATLAS adversarial framework.</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead>
+                <tr class="text-left border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                    <th class="px-4 py-3 font-semibold">Module</th>
+                    <th class="px-4 py-3 font-semibold">OWASP</th>
+                    <th class="px-4 py-3 font-semibold">Risk</th>
+                    <th class="px-4 py-3 font-semibold">MITRE ATLAS</th>
+                    <th class="px-4 py-3 font-semibold"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, module in modules.items() %}
+                {% set ref = owasp_mapping.get(key) %}
+                <tr class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                    <td class="px-4 py-3">
+                        <a href="{{ url_for('modules.' + key) }}" class="font-medium text-gray-900 dark:text-white hover:text-primary">{{ module.name }}</a>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ module.category }}</div>
+                    </td>
+                    <td class="px-4 py-3">
+                        {% if ref %}
+                        <span class="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-mono">{{ ref.owasp_id }}</span>
+                        {% else %}<span class="text-gray-400">—</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ ref.owasp_name if ref else '—' }}</td>
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">{{ ref.atlas if ref else '—' }}</td>
+                    <td class="px-4 py-3">
+                        {% if ref %}<a href="{{ ref.url }}" target="_blank" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">OWASP ↗</a>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="https://genai.owasp.org/llm-top-10/" target="_blank" class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
+            <h3 class="font-semibold text-gray-900 dark:text-white">OWASP LLM Top 10</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">The authoritative list of LLM application risks.</p>
+        </a>
+        <a href="https://atlas.mitre.org/" target="_blank" class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
+            <h3 class="font-semibold text-gray-900 dark:text-white">MITRE ATLAS</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Adversarial Threat Landscape for AI Systems.</p>
+        </a>
+        <a href="{{ url_for('main.solutions') }}" class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
+            <h3 class="font-semibold text-gray-900 dark:text-white">Solution Walkthroughs</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Stuck? Step-by-step exploits & fixes per module.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

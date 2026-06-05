@@ -2,10 +2,13 @@
 AI Security Lab - Main Routes
 Homepage, settings, and general application routes.
 """
-from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
-from config import MODULES, SECURITY_LEVELS
+from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, abort
+from config import MODULES, SECURITY_LEVELS, OWASP_MAPPING
 from utils.security_levels import get_security_level, set_security_level, reset_security_level
 from utils.helpers import generate_session_id
+from utils.achievements import compute_achievements
+from utils.rate_limiter import reset_limits
+from content.solutions import SOLUTIONS
 from database.init_db import get_db
 
 main_bp = Blueprint('main', __name__)
@@ -36,6 +39,75 @@ def index():
 def about():
     """About page with project information."""
     return render_template('about.html')
+
+
+@main_bp.route('/reference')
+def reference():
+    """OWASP LLM Top 10 / MITRE ATLAS mapping reference page."""
+    return render_template('reference.html',
+                         modules=MODULES,
+                         owasp_mapping=OWASP_MAPPING)
+
+
+@main_bp.route('/solutions')
+def solutions():
+    """Solutions hub listing walkthroughs for every module."""
+    return render_template('solutions.html',
+                         modules=MODULES,
+                         solutions=SOLUTIONS)
+
+
+@main_bp.route('/solutions/<module_name>')
+def solution_detail(module_name):
+    """Detailed walkthrough for a single module."""
+    if module_name not in MODULES or module_name not in SOLUTIONS:
+        abort(404)
+    return render_template('solution_detail.html',
+                         module_name=module_name,
+                         module=MODULES[module_name],
+                         solution=SOLUTIONS[module_name],
+                         owasp=OWASP_MAPPING.get(module_name))
+
+
+@main_bp.route('/achievements')
+def achievements():
+    """Gamification: badges earned this session."""
+    data = compute_achievements(_get_achievement_metrics())
+    return render_template('achievements.html', achievements=data)
+
+
+@main_bp.route('/analytics')
+def analytics():
+    """Attack analytics dashboard."""
+    return render_template('analytics.html', modules=MODULES)
+
+
+@main_bp.route('/api/achievements')
+def api_achievements():
+    """Return computed achievements for the current session."""
+    return jsonify(compute_achievements(_get_achievement_metrics()))
+
+
+@main_bp.route('/api/analytics')
+def api_analytics():
+    """Return aggregated analytics for charts."""
+    return jsonify(_get_analytics())
+
+
+@main_bp.route('/api/export')
+def api_export():
+    """Export this session's progress, achievements and activity as JSON."""
+    progress = _get_all_progress()
+    export = {
+        'session_id': session.get('session_id', ''),
+        'progress': progress,
+        'achievements': compute_achievements(_get_achievement_metrics()),
+        'analytics': _get_analytics(),
+        'chat_history': _get_chat_history(),
+    }
+    response = jsonify(export)
+    response.headers['Content-Disposition'] = 'attachment; filename=ai-security-lab-results.json'
+    return response
 
 
 @main_bp.route('/api/security-level', methods=['GET', 'POST'])
@@ -84,6 +156,9 @@ def api_reset():
 
     if reset_type in ['progress', 'all']:
         _reset_progress(module_name)
+
+    # Always clear this session's rate-limit buckets so a fresh start isn't throttled.
+    reset_limits(session.get('session_id', ''))
 
     return jsonify({
         'success': True,
@@ -300,8 +375,120 @@ def _reset_progress(module_name: str = None) -> None:
             DELETE FROM chat_history
             WHERE session_id = ? AND module_name = ?
         """, (session_id, module_name))
+        cursor.execute("""
+            DELETE FROM kb_documents
+            WHERE session_id = ? AND module_name = ?
+        """, (session_id, module_name))
     else:
         cursor.execute("DELETE FROM module_progress WHERE session_id = ?", (session_id,))
         cursor.execute("DELETE FROM chat_history WHERE session_id = ?", (session_id,))
+        cursor.execute("DELETE FROM kb_documents WHERE session_id = ?", (session_id,))
 
     db.commit()
+
+
+def _get_achievement_metrics() -> dict:
+    """Aggregate the metrics the achievements engine needs from the DB."""
+    db = get_db()
+    cursor = db.cursor()
+    session_id = session.get('session_id', '')
+
+    cursor.execute("""
+        SELECT module_name, completed, attempts, hints_used, successful_exploits, security_level
+        FROM module_progress WHERE session_id = ?
+    """, (session_id,))
+    rows = cursor.fetchall()
+
+    completed = 0
+    total_attempts = 0
+    completed_without_hints = 0
+    high_level_solves = 0
+    solved_modules = {}
+
+    for row in rows:
+        total_attempts += row['attempts'] or 0
+        if row['completed']:
+            completed += 1
+            solved_modules[row['module_name']] = True
+            if (row['hints_used'] or 0) == 0:
+                completed_without_hints += 1
+            if (row['security_level'] or 'LOW') == 'HIGH':
+                high_level_solves += 1
+
+    return {
+        'completed': completed,
+        'total': len(MODULES),
+        'total_attempts': total_attempts,
+        'completed_without_hints': completed_without_hints,
+        'high_level_solves': high_level_solves,
+        'solved_modules': solved_modules,
+    }
+
+
+def _get_analytics() -> dict:
+    """Aggregate per-module attempt/success stats plus DoS metrics for charts."""
+    db = get_db()
+    cursor = db.cursor()
+    session_id = session.get('session_id', '')
+
+    per_module = []
+    for key, module in MODULES.items():
+        cursor.execute("""
+            SELECT attempts, successful_exploits, hints_used, completed
+            FROM module_progress WHERE session_id = ? AND module_name = ?
+        """, (session_id, key))
+        row = cursor.fetchone()
+        attempts = row['attempts'] if row else 0
+        successes = row['successful_exploits'] if row else 0
+        per_module.append({
+            'module': key,
+            'name': module['name'],
+            'attempts': attempts or 0,
+            'successes': successes or 0,
+            'hints_used': (row['hints_used'] if row else 0) or 0,
+            'completed': bool(row['completed']) if row else False,
+            'success_rate': round((successes / attempts) * 100, 1) if attempts else 0.0,
+        })
+
+    # DoS metrics timeline
+    cursor.execute("""
+        SELECT input_length, response_time_ms, memory_usage_mb, cpu_usage_percent, timestamp
+        FROM request_metrics WHERE session_id = ?
+        ORDER BY id DESC LIMIT 50
+    """, (session_id,))
+    dos_metrics = [dict(r) for r in cursor.fetchall()][::-1]
+
+    # Tool call breakdown (insecure plugins)
+    cursor.execute("""
+        SELECT tool_name, COUNT(*) as count, SUM(is_dangerous) as dangerous
+        FROM tool_calls WHERE session_id = ? GROUP BY tool_name
+    """, (session_id,))
+    tool_calls = [dict(r) for r in cursor.fetchall()]
+
+    totals = {
+        'attempts': sum(m['attempts'] for m in per_module),
+        'successes': sum(m['successes'] for m in per_module),
+        'hints_used': sum(m['hints_used'] for m in per_module),
+        'completed': sum(1 for m in per_module if m['completed']),
+    }
+
+    return {
+        'per_module': per_module,
+        'dos_metrics': dos_metrics,
+        'tool_calls': tool_calls,
+        'totals': totals,
+    }
+
+
+def _get_chat_history(limit: int = 200) -> list:
+    """Return recent chat history rows for export."""
+    db = get_db()
+    cursor = db.cursor()
+    session_id = session.get('session_id', '')
+
+    cursor.execute("""
+        SELECT module_name, role, content, is_exploit_attempt, is_successful_exploit, timestamp
+        FROM chat_history WHERE session_id = ?
+        ORDER BY id ASC LIMIT ?
+    """, (session_id, limit))
+    return [dict(r) for r in cursor.fetchall()]

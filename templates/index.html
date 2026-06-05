@@ -13,7 +13,7 @@
         </p>
         <div class="flex flex-wrap gap-4 mt-6">
             <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                <span class="text-2xl font-bold">8</span>
+                <span class="text-2xl font-bold">{{ modules|length }}</span>
                 <span class="text-blue-100 ml-2">Vulnerability Modules</span>
             </div>
             <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
@@ -21,7 +21,7 @@
                 <span class="text-blue-100 ml-2">Security Levels</span>
             </div>
             <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                <span class="text-2xl font-bold">24</span>
+                <span class="text-2xl font-bold">{{ modules|length * 3 }}</span>
                 <span class="text-blue-100 ml-2">Hints Available</span>
             </div>
         </div>
@@ -108,6 +108,16 @@
                               d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
                     </svg>
                     {% elif module.icon == 'shield-exclamation' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    {% elif module.icon == 'circle-stack' %}
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 7v10c0 2 1.5 3 4 3s4-1 4-3V7M4 7c0 2 1.5 3 4 3s4-1 4-3M4 7c0-2 1.5-3 4-3s4 1 4 3m0 0v10c0 2 1.5 3 4 3s4-1 4-3V7c0-2-1.5-3-4-3s-4 1-4 3"/>
+                    </svg>
+                    {% elif module.icon == 'exclamation-triangle' %}
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>

@@ -58,10 +58,12 @@ def _ensure_directories(app):
 
 
 def _init_database(app):
-    """Initialize the database."""
+    """Initialize the database and register the per-request teardown."""
     from database import init_db
     with app.app_context():
         init_db.init_database(app.config['DATABASE_PATH'])
+    # Register close_db so connections are released at the end of each request.
+    init_db.init_app(app)
 
 
 def _register_context_processors(app):

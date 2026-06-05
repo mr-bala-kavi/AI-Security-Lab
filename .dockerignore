@@ -1,0 +1,33 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+.venv/
+.venv_test/
+env/
+
+# Local data / artifacts (rebuilt in the container)
+database/*.db
+logs/*.log
+models/cache/*
+static/uploads/*
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+
+# CI / docs not needed at runtime
+.github/
+*.md
+!README.md

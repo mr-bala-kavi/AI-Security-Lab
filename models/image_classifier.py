@@ -8,8 +8,12 @@ Uses MobileNetV2 for efficient classification.
 """
 import io
 import logging
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
 from pathlib import Path
+
+if TYPE_CHECKING:  # imports only used for type hints, not at runtime
+    import torch
+    from PIL import Image
 
 logger = logging.getLogger(__name__)
 

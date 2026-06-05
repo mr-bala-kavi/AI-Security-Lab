@@ -10,7 +10,11 @@ https://pytorch.org/tutorials/beginner/fgsm_tutorial.html
 import io
 import base64
 import logging
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:  # imports only used for type hints, not at runtime
+    import torch
+    from PIL import Image
 
 logger = logging.getLogger(__name__)
 

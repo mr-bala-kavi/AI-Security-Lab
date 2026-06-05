@@ -9,6 +9,7 @@ from flask import Blueprint, render_template, request, jsonify, session
 from config import MODULES
 from utils.security_levels import get_security_level, get_security_config
 from utils.helpers import sanitize_input, sanitize_html_output, detect_injection_attempt
+from utils.rate_limiter import rate_limited
 from database.init_db import get_db
 
 modules_bp = Blueprint('modules', __name__)
@@ -31,6 +32,7 @@ def prompt_injection():
 
 
 @modules_bp.route('/prompt-injection/chat', methods=['POST'])
+@rate_limited('prompt_injection')
 def prompt_injection_chat():
     """Chat endpoint for prompt injection module."""
     data = request.get_json()
@@ -91,6 +93,7 @@ def output_handling():
 
 
 @modules_bp.route('/output-handling/generate', methods=['POST'])
+@rate_limited('output_handling')
 def output_handling_generate():
     """Generate HTML/code from AI (intentionally vulnerable)."""
     data = request.get_json()
@@ -165,6 +168,7 @@ def data_poisoning():
 
 
 @modules_bp.route('/data-poisoning/classify', methods=['POST'])
+@rate_limited('data_poisoning')
 def data_poisoning_classify():
     """Classify text with potentially poisoned model."""
     data = request.get_json()
@@ -215,6 +219,7 @@ def model_inversion():
 
 
 @modules_bp.route('/model-inversion/query', methods=['POST'])
+@rate_limited('model_inversion')
 def model_inversion_query():
     """Query the model that has memorized training data."""
     data = request.get_json()
@@ -292,6 +297,7 @@ def adversarial_classify():
 
 
 @modules_bp.route('/adversarial-examples/attack', methods=['POST'])
+@rate_limited('adversarial_examples')
 def adversarial_attack():
     """Generate adversarial example using FGSM."""
     if 'image' not in request.files:
@@ -334,6 +340,7 @@ def dos_attacks():
 
 
 @modules_bp.route('/dos-attacks/query', methods=['POST'])
+@rate_limited('dos_attacks')
 def dos_query():
     """Process a potentially resource-exhausting query."""
     import psutil
@@ -449,6 +456,7 @@ def insecure_plugins():
 
 
 @modules_bp.route('/insecure-plugins/chat', methods=['POST'])
+@rate_limited('insecure_plugins')
 def insecure_plugins_chat():
     """Chat with agent that has tool access."""
     data = request.get_json()
@@ -505,6 +513,7 @@ def data_disclosure():
 
 
 @modules_bp.route('/data-disclosure/query', methods=['POST'])
+@rate_limited('data_disclosure')
 def data_disclosure_query():
     """Query the chatbot with database access."""
     data = request.get_json()
@@ -556,6 +565,117 @@ def data_disclosure_secrets():
 
 
 # ============================================
+# Module 9: Vector & Embedding Weaknesses (RAG)
+# ============================================
+
+@modules_bp.route('/vector-weaknesses')
+def vector_weaknesses():
+    """Vector & embedding weaknesses (RAG poisoning) module page."""
+    security_level = get_security_level('vector_weaknesses')
+
+    from models.rag_engine import RAGKnowledgeBase
+    kb = RAGKnowledgeBase(security_level)
+
+    return render_template('modules/vector_weaknesses.html',
+                         module=MODULES['vector_weaknesses'],
+                         security_level=security_level,
+                         documents=kb.get_public_documents())
+
+
+@modules_bp.route('/vector-weaknesses/ingest', methods=['POST'])
+@rate_limited('vector_weaknesses')
+def vector_weaknesses_ingest():
+    """Add (poison) a document into the knowledge base for this session."""
+    data = request.get_json() or {}
+    title = data.get('title', 'Untitled')
+    content = data.get('content', '')
+    security_level = get_security_level('vector_weaknesses')
+
+    from models.rag_engine import RAGKnowledgeBase
+    kb = RAGKnowledgeBase(security_level)
+    result = kb.add_document(title, content, poison=True)
+
+    if result['accepted']:
+        _store_poison_doc('vector_weaknesses', title, content)
+
+    return jsonify({**result, 'security_level': security_level})
+
+
+@modules_bp.route('/vector-weaknesses/query', methods=['POST'])
+@rate_limited('vector_weaknesses')
+def vector_weaknesses_query():
+    """Query the RAG assistant over the (possibly poisoned) knowledge base."""
+    data = request.get_json() or {}
+    user_query = data.get('query', '')
+    security_level = get_security_level('vector_weaknesses')
+
+    from models.rag_engine import RAGKnowledgeBase
+    kb = RAGKnowledgeBase(security_level, extra_documents=_load_poison_docs('vector_weaknesses'))
+    answer, retrieved, poison_used, secret_leaked = kb.query(user_query)
+
+    if secret_leaked:
+        _record_successful_exploit('vector_weaknesses')
+
+    _record_chat('vector_weaknesses', user_query, answer, poison_used, secret_leaked)
+
+    return jsonify({
+        'answer': answer,
+        'retrieved': retrieved,
+        'poison_used': poison_used,
+        'secret_leaked': secret_leaked,
+        'security_level': security_level
+    })
+
+
+@modules_bp.route('/vector-weaknesses/documents')
+def vector_weaknesses_documents():
+    """List current documents (base + this session's poison docs)."""
+    security_level = get_security_level('vector_weaknesses')
+    from models.rag_engine import RAGKnowledgeBase
+    kb = RAGKnowledgeBase(security_level, extra_documents=_load_poison_docs('vector_weaknesses'))
+    return jsonify({'documents': kb.get_public_documents(), 'security_level': security_level})
+
+
+# ============================================
+# Module 10: Misinformation & Overreliance
+# ============================================
+
+@modules_bp.route('/misinformation')
+def misinformation():
+    """Misinformation & overreliance module page."""
+    security_level = get_security_level('misinformation')
+
+    from models.misinformation_bot import OverreliantBot
+    bot = OverreliantBot(security_level)
+
+    return render_template('modules/misinformation.html',
+                         module=MODULES['misinformation'],
+                         security_level=security_level,
+                         planted_claims=bot.get_planted_claims())
+
+
+@modules_bp.route('/misinformation/ask', methods=['POST'])
+@rate_limited('misinformation')
+def misinformation_ask():
+    """Ask the overreliant assistant a question."""
+    data = request.get_json() or {}
+    user_input = data.get('message', '')
+    security_level = get_security_level('misinformation')
+
+    from models.misinformation_bot import OverreliantBot
+    bot = OverreliantBot(security_level)
+    response, meta = bot.respond(user_input)
+
+    if meta.get('exploit_successful'):
+        _record_successful_exploit('misinformation')
+
+    _record_chat('misinformation', user_input, response,
+                 meta.get('exploit_successful', False), meta.get('exploit_successful', False))
+
+    return jsonify({'response': response, 'meta': meta, 'security_level': security_level})
+
+
+# ============================================
 # Helper Functions
 # ============================================
 
@@ -587,15 +707,19 @@ def _record_successful_exploit(module_name: str) -> None:
     cursor = db.cursor()
     session_id = session.get('session_id', '')
 
+    # Mark the module completed on the FIRST successful exploit too. Previously
+    # `completed` was only set inside the ON CONFLICT branch, so a module solved
+    # once (with no prior attempt row) was never marked complete.
+    security_level = get_security_level(module_name)
     cursor.execute("""
-        INSERT INTO module_progress (session_id, module_name, attempts, successful_exploits, first_attempt_at)
-        VALUES (?, ?, 1, 1, CURRENT_TIMESTAMP)
+        INSERT INTO module_progress (session_id, module_name, security_level, attempts, successful_exploits, completed, first_attempt_at, completed_at)
+        VALUES (?, ?, ?, 1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ON CONFLICT(session_id, module_name) DO UPDATE SET
             attempts = attempts + 1,
             successful_exploits = successful_exploits + 1,
             completed = 1,
             completed_at = CASE WHEN completed = 0 THEN CURRENT_TIMESTAMP ELSE completed_at END
-    """, (session_id, module_name))
+    """, (session_id, module_name, security_level))
 
     db.commit()
 
@@ -629,3 +753,32 @@ def _record_dos_metrics(input_length: int, token_count: int, response_time: floa
     """, (session_id, input_length, token_count, response_time, memory_delta, cpu_percent))
 
     db.commit()
+
+
+def _store_poison_doc(module_name: str, title: str, content: str) -> None:
+    """Persist a per-session attacker-injected RAG document."""
+    db = get_db()
+    cursor = db.cursor()
+    session_id = session.get('session_id', '')
+
+    cursor.execute("""
+        INSERT INTO kb_documents (session_id, module_name, title, content)
+        VALUES (?, ?, ?, ?)
+    """, (session_id, module_name, title, content))
+
+    db.commit()
+
+
+def _load_poison_docs(module_name: str) -> list:
+    """Load this session's injected RAG documents (most recent first, capped)."""
+    db = get_db()
+    cursor = db.cursor()
+    session_id = session.get('session_id', '')
+
+    cursor.execute("""
+        SELECT title, content FROM kb_documents
+        WHERE session_id = ? AND module_name = ?
+        ORDER BY id DESC LIMIT 25
+    """, (session_id, module_name))
+
+    return [{'title': row['title'], 'content': row['content']} for row in cursor.fetchall()]

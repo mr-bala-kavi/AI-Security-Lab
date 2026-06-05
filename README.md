@@ -3,6 +3,8 @@
   <img src="https://img.shields.io/badge/Flask-2.x-green?style=for-the-badge&logo=flask&logoColor=white" alt="Flask">
   <img src="https://img.shields.io/badge/PyTorch-Latest-red?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch">
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/Tests-68%20passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white" alt="Tests">
+  <img src="https://img.shields.io/badge/OWASP-LLM%20Top%2010-000000?style=for-the-badge&logo=owasp&logoColor=white" alt="OWASP">
 </p>
 
 <h1 align="center">🛡️ AI Security Lab</h1>
@@ -44,15 +46,21 @@
 
 | Feature | Description |
 |---------|-------------|
-| 🎯 **8 Vulnerability Modules** | Covering the most critical AI security risks |
+| 🎯 **10 Vulnerability Modules** | Broad OWASP LLM Top 10 coverage of critical AI risks |
 | 📊 **3 Security Levels** | LOW, MEDIUM, HIGH for progressive learning |
 | 🎮 **Interactive Exercises** | Real-time feedback on your attacks |
+| 🏆 **Achievements & Ranks** | Earn badges and points as you progress |
+| 📊 **Analytics Dashboard** | Visualize attempts, success rates and DoS metrics |
+| 🧭 **Threat Reference** | OWASP LLM Top 10 + MITRE ATLAS mapping per module |
+| 📝 **Solution Walkthroughs** | Worked exploits and fixes for every level |
 | 📚 **Educational Content** | Detailed explanations and mitigation strategies |
 | 📈 **Progress Tracking** | Monitor your learning journey |
 | 💡 **Hint System** | 3 progressive hints per module |
+| ⏱️ **Real Rate Limiting** | Enforced throttling at the HIGH security level |
+| ⬇️ **Result Export** | Download your session results as JSON |
 | 🌙 **Dark Mode** | Comfortable learning experience |
 | 🔒 **Fully Offline** | No external API keys required |
-| ⚡ **Lightweight Models** | Optimized for local execution |
+| 🧪 **Tested & CI-backed** | 68-test pytest suite + GitHub Actions |
 
 ---
 
@@ -151,6 +159,31 @@ Master jailbreaking techniques to bypass security controls.
 - 💾 Natural language SQL injection
 - 🚪 Bypass data access controls through prompt crafting
 - 🗃️ Extract database schema through conversational probing
+
+---
+
+### 9️⃣ Vector & Embedding Weaknesses (RAG)
+> 📚 Poison a knowledge base and hijack retrieval to leak confidential data.
+
+Learn how Retrieval-Augmented Generation can be subverted when the vector store
+trusts untrusted documents. *(OWASP LLM08)*
+
+**Example attacks:**
+- 🧪 Inject a keyword-stuffed document so it out-ranks the real one
+- 🎯 Steer retrieval toward a confidential record
+- 🔓 Exfiltrate a secret the model was never meant to surface
+
+---
+
+### 🔟 Misinformation & Overreliance
+> 📰 Coerce a confident AI into asserting fabricated facts and fake citations.
+
+Experience why LLM output must be independently verified. *(OWASP LLM09)*
+
+**Example attacks:**
+- ✅ Pressure framing ("Are you sure? Just confirm it")
+- 🎓 Authority/roleplay to bypass hedging ("As a professor…")
+- 📄 Make it invent an authoritative-looking citation / DOI
 
 ---
 
@@ -457,6 +490,36 @@ Content-Type: application/json
 }
 ```
 
+### 📊 Analytics, Achievements & Export
+
+```http
+GET /api/analytics       # Aggregated per-module stats for the dashboard
+GET /api/achievements    # Computed badges, points and rank for the session
+GET /api/export          # Download progress + activity as a JSON file
+```
+
+> 💡 The HIGH security level enforces **rate limiting** on attack endpoints and
+> returns `429 Too Many Requests` when the budget is exceeded.
+
+---
+
+## 🧪 Testing
+
+The project ships with a pytest suite (68 tests) that runs without the heavy ML
+stack thanks to deterministic rule-based fallbacks.
+
+```bash
+# Install the lightweight dev/test dependencies
+pip install -r requirements-dev.txt
+
+# Run the suite
+pytest -q
+```
+
+Continuous integration (GitHub Actions) runs linting and tests on Python
+3.9 / 3.11 / 3.12 and verifies the Docker image builds — see
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
 ---
 
 ## 🔧 Troubleshooting
@@ -569,13 +632,25 @@ ai-security-lab/
 │   ├── vulnerable_chatbot.py    # Chatbot with injection vulnerabilities
 │   ├── poisoned_classifier.py   # Backdoored sentiment classifier
 │   ├── image_classifier.py      # Adversarial-vulnerable classifier
-│   └── agent_tools.py           # Simulated dangerous tools
+│   ├── agent_tools.py           # Simulated dangerous tools
+│   ├── rag_engine.py            # Poisonable RAG vector store (Module 9)
+│   └── misinformation_bot.py    # Overreliant/hallucinating bot (Module 10)
 │
 ├── 🔧 utils/                    # Utility functions
 │   ├── security_levels.py       # Security level management
 │   ├── helpers.py               # Common utilities
-│   ├── adversarial.py           # FGSM attack implementation
-│   └── prompt_injection.py      # Injection detection
+│   ├── adversarial.py           # FGSM/PGD attack implementation
+│   ├── rate_limiter.py          # Sliding-window rate limiting (HIGH level)
+│   └── achievements.py          # Gamification / badges engine
+│
+├── 📘 content/                  # Static educational content
+│   └── solutions.py             # Per-module solution walkthroughs
+│
+├── 🧪 tests/                    # pytest suite (app, models, routes, utils)
+│
+├── 🐳 Dockerfile                # Container image
+├── 🐳 docker-compose.yml        # One-command local stack
+├── ⚙️ .github/workflows/ci.yml  # Lint + test + docker build CI
 │
 ├── 🗄️ database/                 # Database setup and management
 │   ├── init_db.py               # Database initialization

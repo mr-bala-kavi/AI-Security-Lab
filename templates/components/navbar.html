@@ -11,6 +11,15 @@
                     </svg>
                     <span class="text-xl font-bold text-gray-900 dark:text-white">AI Security Lab</span>
                 </a>
+
+                <!-- Primary nav links -->
+                <div class="hidden md:flex items-center space-x-1 ml-8">
+                    <a href="{{ url_for('main.index') }}" class="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Dashboard</a>
+                    <a href="{{ url_for('main.analytics') }}" class="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Analytics</a>
+                    <a href="{{ url_for('main.achievements') }}" class="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Achievements</a>
+                    <a href="{{ url_for('main.reference') }}" class="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Reference</a>
+                    <a href="{{ url_for('main.solutions') }}" class="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Solutions</a>
+                </div>
             </div>
 
             <!-- Security Level Selector -->
