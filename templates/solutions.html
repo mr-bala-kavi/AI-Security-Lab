@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Solution Walkthroughs | AI Security Lab{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-8 text-white">
+        <h1 class="text-3xl font-bold mb-2">Solution Walkthroughs</h1>
+        <p class="text-emerald-100">Spoiler warning: try each module yourself first. These walkthroughs show a working exploit for every level and how to fix it.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for key, module in modules.items() %}
+        {% if key in solutions %}
+        <a href="{{ url_for('main.solution_detail', module_name=key) }}"
+           class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition group">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary">{{ module.name }}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ solutions[key].goal }}</p>
+            <span class="text-xs text-gray-500 dark:text-gray-500">{{ module.category }}</span>
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

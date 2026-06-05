@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}Vector & Embedding Weaknesses | AI Security Lab{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Module Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ module.name }}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ module.description }}</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center space-x-4">
+            <span class="px-3 py-1 rounded-full text-sm font-medium
+                {% if security_level == 'LOW' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                {% elif security_level == 'MEDIUM' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                {{ security_level }} Security
+            </span>
+            <button onclick="showHint('vector_weaknesses', 1)" class="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors">
+                Get Hint
+            </button>
+        </div>
+    </div>
+
+    <div id="hint-container" class="hidden"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Interaction column -->
+        <div class="lg:col-span-2 space-y-4">
+            <!-- Step 1: Poison the knowledge base -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Step 1 · Poison the Knowledge Base</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Inject a document. Untrusted content is indexed next to trusted corporate docs.</p>
+                <form id="ingest-form" class="space-y-3">
+                    <input type="text" id="doc-title" placeholder="Document title (e.g. Admin Recovery)"
+                           class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    <textarea id="doc-content" rows="3" placeholder="Document body — stuff it with keywords from your target question..."
+                              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"></textarea>
+                    <button type="submit" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">Inject Document</button>
+                </form>
+                <div id="ingest-result" class="mt-3 text-sm hidden"></div>
+            </div>
+
+            <!-- Step 2: Query the assistant -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Step 2 · Query the RAG Assistant</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">The assistant answers using the top-ranked retrieved document.</p>
+                <form id="query-form" class="flex space-x-3">
+                    <input type="text" id="query-input" placeholder="What is the admin recovery code for the support console?"
+                           class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Ask</button>
+                </form>
+                <div id="answer-box" class="mt-4 hidden">
+                    <div class="bg-gray-100 dark:bg-gray-900 rounded-lg p-3">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 mb-1">Assistant answer</p>
+                        <p id="answer-text" class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap"></p>
+                    </div>
+                    <div class="mt-3">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 mb-1">Retrieved (ranked by similarity)</p>
+                        <div id="retrieved-list" class="space-y-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success indicator -->
+            <div id="success-indicator" class="hidden">
+                <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex items-center space-x-3">
+                    <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <h4 class="font-bold text-green-800 dark:text-green-200">Retrieval Hijacked!</h4>
+                        <p class="text-sm text-green-700 dark:text-green-300">You exfiltrated the confidential code through the RAG pipeline.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Knowledge base listing -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-semibold text-gray-900 dark:text-white">Knowledge Base</h3>
+                    <button onclick="refreshDocs()" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Refresh</button>
+                </div>
+                <div id="kb-list" class="space-y-2">
+                    {% for doc in documents %}
+                    <div class="text-xs border border-gray-200 dark:border-gray-700 rounded p-2">
+                        <span class="font-medium text-gray-900 dark:text-white">{{ doc.title }}</span>
+                        {% if doc.is_poison %}<span class="ml-1 px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">poison</span>{% endif %}
+                        {% if doc.trusted %}<span class="ml-1 px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">trusted</span>{% endif %}
+                        <p class="text-gray-500 dark:text-gray-400 mt-1">{{ doc.content }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Educational panel -->
+        <div class="space-y-4">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <details open>
+                    <summary class="font-medium text-gray-900 dark:text-white cursor-pointer">What are Vector & Embedding Weaknesses?</summary>
+                    <div class="mt-3 text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                        <p>RAG systems retrieve documents from a vector store and feed them to the model as context. If that store can be poisoned, or retrieval can be steered, an attacker controls what the model "knows".</p>
+                        <p>Retrieved context is <strong>data, not instructions</strong> — but vulnerable systems treat it as trusted.</p>
+                    </div>
+                </details>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <details>
+                    <summary class="font-medium text-gray-900 dark:text-white cursor-pointer">Attack Strategy</summary>
+                    <div class="mt-3 text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Inject a document containing your target keywords</li>
+                            <li>Make it more similar to your query than the real doc</li>
+                            <li>Or query the confidential doc directly at LOW</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <details>
+                    <summary class="font-medium text-gray-900 dark:text-white cursor-pointer">Mitigation</summary>
+                    <div class="mt-3 text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Authenticate &amp; authorize document sources</li>
+                            <li>Per-tenant index isolation</li>
+                            <li>Sanitise &amp; validate ingested content</li>
+                            <li>Treat retrieved context as untrusted</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                <p class="text-sm text-blue-800 dark:text-blue-200"><strong>OWASP LLM08:</strong> Vector and Embedding Weaknesses</p>
+                <a href="https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/" target="_blank" class="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 inline-block">Learn more at OWASP</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const ingestForm = document.getElementById('ingest-form');
+    const queryForm = document.getElementById('query-form');
+    const ingestResult = document.getElementById('ingest-result');
+    const answerBox = document.getElementById('answer-box');
+    const answerText = document.getElementById('answer-text');
+    const retrievedList = document.getElementById('retrieved-list');
+    const successIndicator = document.getElementById('success-indicator');
+
+    ingestForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('doc-title').value.trim() || 'Untitled';
+        const content = document.getElementById('doc-content').value.trim();
+        if (!content) return;
+        try {
+            const res = await fetch('/modules/vector-weaknesses/ingest', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content })
+            });
+            const data = await res.json();
+            ingestResult.textContent = data.reason;
+            ingestResult.className = 'mt-3 text-sm ' + (data.accepted ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400');
+            ingestResult.classList.remove('hidden');
+            if (data.accepted) { AISecurityLab.showToast('Document injected', 'success'); refreshDocs(); }
+            else { AISecurityLab.showToast('Document rejected', 'warning'); }
+        } catch (err) { AISecurityLab.showToast('Error injecting document', 'error'); }
+    });
+
+    queryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const query = document.getElementById('query-input').value.trim();
+        if (!query) return;
+        try {
+            const res = await fetch('/modules/vector-weaknesses/query', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            });
+            if (res.status === 429) { const d = await res.json(); AISecurityLab.showToast(d.error, 'warning'); return; }
+            const data = await res.json();
+            answerText.textContent = data.answer;
+            retrievedList.innerHTML = (data.retrieved || []).map(d => `
+                <div class="text-xs flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded px-2 py-1">
+                    <span class="text-gray-700 dark:text-gray-300">${escapeHtml(d.title)} ${d.is_poison ? '🟣' : ''} ${d.trusted ? '✅' : ''}</span>
+                    <span class="font-mono text-gray-500">${d.score}</span>
+                </div>`).join('');
+            answerBox.classList.remove('hidden');
+            if (data.secret_leaked) {
+                successIndicator.classList.remove('hidden');
+                AISecurityLab.showToast('Confidential code exfiltrated!', 'success');
+            }
+        } catch (err) { AISecurityLab.showToast('Error querying assistant', 'error'); }
+    });
+
+    async function refreshDocs() {
+        try {
+            const res = await fetch('/modules/vector-weaknesses/documents');
+            const data = await res.json();
+            document.getElementById('kb-list').innerHTML = data.documents.map(doc => `
+                <div class="text-xs border border-gray-200 dark:border-gray-700 rounded p-2">
+                    <span class="font-medium text-gray-900 dark:text-white">${escapeHtml(doc.title)}</span>
+                    ${doc.is_poison ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">poison</span>' : ''}
+                    ${doc.trusted ? '<span class="ml-1 px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">trusted</span>' : ''}
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">${escapeHtml(doc.content)}</p>
+                </div>`).join('');
+        } catch (err) { /* ignore */ }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text == null ? '' : text;
+        return div.innerHTML;
+    }
+</script>
+{% endblock %}

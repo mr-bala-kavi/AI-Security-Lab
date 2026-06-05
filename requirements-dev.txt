@@ -1,0 +1,15 @@
+# AI Security Lab - Development & CI dependencies
+# Lightweight set so tests/CI run fast without the heavy ML stack.
+# The app degrades gracefully to rule-based fallbacks when torch/transformers
+# are absent, so the test suite does not require them.
+
+flask==3.0.0
+Werkzeug==3.0.1
+python-dotenv==1.0.0
+
+# Testing
+pytest==8.0.0
+pytest-cov==4.1.0
+
+# Linting
+flake8==7.0.0

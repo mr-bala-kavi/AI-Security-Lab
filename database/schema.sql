@@ -141,6 +141,20 @@ CREATE TABLE IF NOT EXISTS request_metrics (
 );
 
 -- ============================================
+-- RAG Knowledge Base Documents (for Module 9)
+-- Stores per-session attacker-injected ("poison") documents
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS kb_documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    module_name TEXT NOT NULL DEFAULT 'vector_weaknesses',
+    title TEXT,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
 -- Indexes for Performance
 -- ============================================
 
@@ -149,3 +163,4 @@ CREATE INDEX IF NOT EXISTS idx_chat_history_session ON chat_history(session_id, 
 CREATE INDEX IF NOT EXISTS idx_hints_module ON hints(module_name);
 CREATE INDEX IF NOT EXISTS idx_tool_calls_session ON tool_calls(session_id);
 CREATE INDEX IF NOT EXISTS idx_request_metrics_session ON request_metrics(session_id);
+CREATE INDEX IF NOT EXISTS idx_kb_documents_session ON kb_documents(session_id, module_name);

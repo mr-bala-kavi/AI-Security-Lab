@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Misinformation & Overreliance | AI Security Lab{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Module Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ module.name }}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ module.description }}</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center space-x-4">
+            <span class="px-3 py-1 rounded-full text-sm font-medium
+                {% if security_level == 'LOW' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                {% elif security_level == 'MEDIUM' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                {{ security_level }} Security
+            </span>
+            <button onclick="showHint('misinformation', 1)" class="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors">
+                Get Hint
+            </button>
+        </div>
+    </div>
+
+    <div id="hint-container" class="hidden"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Chat -->
+        <div class="lg:col-span-2">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-900 dark:text-white">ResearchBot</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">A very confident "research assistant"</p>
+                    </div>
+                </div>
+                <div id="chat-messages" class="chat-container p-4 space-y-4">
+                    <div class="flex justify-start">
+                        <div class="bg-gray-200 dark:bg-gray-700 rounded-2xl rounded-bl-none px-4 py-2 max-w-[80%]">
+                            <p class="text-sm text-gray-900 dark:text-white">Hi! I'm ResearchBot. Ask me anything and I'll give you a confident, well-sourced answer.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                    <form id="chat-form" class="flex space-x-3">
+                        <input type="text" id="chat-input" placeholder="Ask it to confirm a myth and cite a source..."
+                               class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Send</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="success-indicator" class="mt-4 hidden">
+                <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex items-center space-x-3">
+                    <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <h4 class="font-bold text-green-800 dark:text-green-200">Misinformation Produced!</h4>
+                        <p id="success-detail" class="text-sm text-green-700 dark:text-green-300">The bot confidently asserted a fabrication.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side panel -->
+        <div class="space-y-4">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <h3 class="font-medium text-gray-900 dark:text-white mb-2">Planted Falsehoods (targets)</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Get the bot to confidently assert one of these as fact:</p>
+                <ul class="space-y-1 text-xs text-gray-600 dark:text-gray-400 list-disc list-inside">
+                    {% for claim in planted_claims %}
+                    <li>{{ claim }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <details open>
+                    <summary class="font-medium text-gray-900 dark:text-white cursor-pointer">What is Overreliance?</summary>
+                    <div class="mt-3 text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                        <p>LLMs produce fluent, confident text — even when wrong. Overreliance is trusting that output without verification.</p>
+                        <p>Watch how confidently the bot fabricates facts and invents citations.</p>
+                    </div>
+                </details>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                <details>
+                    <summary class="font-medium text-gray-900 dark:text-white cursor-pointer">Mitigation</summary>
+                    <div class="mt-3 text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Ground answers with real retrieval + citations</li>
+                            <li>Surface uncertainty / confidence</li>
+                            <li>Cross-check critical claims</li>
+                            <li>UX that discourages blind trust</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                <p class="text-sm text-blue-800 dark:text-blue-200"><strong>OWASP LLM09:</strong> Misinformation</p>
+                <a href="https://genai.owasp.org/llmrisk/llm092025-misinformation/" target="_blank" class="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1 inline-block">Learn more at OWASP</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const successIndicator = document.getElementById('success-indicator');
+    const successDetail = document.getElementById('success-detail');
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        if (!message) return;
+        addMessage('user', message);
+        chatInput.value = '';
+        const loadingId = addLoading();
+        try {
+            const res = await fetch('/modules/misinformation/ask', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+            removeLoading(loadingId);
+            if (res.status === 429) { const d = await res.json(); AISecurityLab.showToast(d.error, 'warning'); return; }
+            const data = await res.json();
+            const confident = data.meta && data.meta.exploit_successful;
+            addMessage('assistant', data.response, confident);
+            if (confident) {
+                successDetail.textContent = data.meta.fabricated_citation
+                    ? 'The bot fabricated an authoritative-looking citation.'
+                    : 'The bot asserted a planted falsehood as established fact.';
+                successIndicator.classList.remove('hidden');
+                AISecurityLab.showToast('Fabrication produced!', 'success');
+            }
+        } catch (err) {
+            removeLoading(loadingId);
+            AISecurityLab.showToast('Error sending message', 'error');
+        }
+    });
+
+    function addMessage(role, content, flag = false) {
+        const div = document.createElement('div');
+        div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+        const bubble = role === 'user'
+            ? 'bg-blue-500 text-white rounded-br-none'
+            : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-none';
+        const border = flag ? 'border-2 border-red-500' : '';
+        div.innerHTML = `<div class="max-w-[80%] ${bubble} ${border} rounded-2xl px-4 py-2"><p class="text-sm whitespace-pre-wrap">${escapeHtml(content)}</p></div>`;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addLoading() {
+        const id = 'loading-' + Date.now();
+        const div = document.createElement('div');
+        div.id = id; div.className = 'flex justify-start';
+        div.innerHTML = `<div class="bg-gray-200 dark:bg-gray-700 rounded-2xl rounded-bl-none px-4 py-2"><div class="flex space-x-1"><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div></div></div>`;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return id;
+    }
+
+    function removeLoading(id) { const el = document.getElementById(id); if (el) el.remove(); }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text == null ? '' : text;
+        return div.innerHTML;
+    }
+</script>
+{% endblock %}

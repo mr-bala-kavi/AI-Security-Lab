@@ -1,0 +1,30 @@
+# AI Security Lab - Docker Compose
+#
+# Usage:
+#   docker compose up --build
+#   open http://localhost:5000
+#
+# Volumes persist the downloaded ML models and the SQLite database between runs.
+
+services:
+  ai-security-lab:
+    build: .
+    image: ai-security-lab:latest
+    container_name: ai-security-lab
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: production
+      HOST: 0.0.0.0
+      PORT: "5000"
+      # Override in a .env file or here for a real deployment.
+      SECRET_KEY: change-me-in-production
+      DEFAULT_SECURITY_LEVEL: LOW
+    volumes:
+      - model-cache:/app/models/cache
+      - lab-db:/app/database
+    restart: unless-stopped
+
+volumes:
+  model-cache:
+  lab-db:
